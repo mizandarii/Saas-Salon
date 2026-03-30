@@ -6,8 +6,6 @@ import BookingForm from './BookingForm';
 export default function MyBookings() {
   const { user } = useAuth();
   const [bookings, setBookings] = useState([]);
-  const [services, setServices] = useState([]);
-  const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
   const isMounted = useRef(true);
 
@@ -15,29 +13,15 @@ export default function MyBookings() {
     try {
       const data = await pb.collection('reservations').getFullList({
         filter: `client_id = "${user.id}"`,
+        expand: 'service_id,service_id.master',
       });
       if (isMounted.current) setBookings(data);
     } catch (err) {
       // Ignore auto-cancellation errors when component unmounts
       if (err.message?.includes('autocancelled')) return;
-      alert(err.message || 'Ошибка при получении бронирований');
+      alert(err.message || 'Failed to load bookings');
     } finally {
       if (isMounted.current) setLoading(false);
-    }
-  };
-
-  const fetchData = async () => {
-    try {
-      const servicesData = await pb.collection('services').getFullList();
-      if (isMounted.current) setServices(servicesData);
-      const staffData = await pb.collection('users').getFullList({
-        filter: `role_id = "staff_role_id"`
-      });
-      if (isMounted.current) setStaff(staffData);
-    } catch (err) {
-      // Ignore auto-cancellation errors when component unmounts
-      if (err.message?.includes('autocancelled')) return;
-      console.error('Error fetching services/staff:', err);
     }
   };
 
@@ -50,27 +34,26 @@ export default function MyBookings() {
   useEffect(() => {
     if (!user) return;
     fetchBookings();
-    fetchData();
   }, [user]);
 
-  const handleBookingCreated = (newBooking) => {
-    setBookings(prev => [...prev, newBooking]);
+  const handleBookingCreated = () => {
+    fetchBookings();
   };
 
-  if (loading) return <p>Загрузка...</p>;
+  if (loading) return <p>Loading...</p>;
 
   return (
     <div>
       <h2>My Bookings</h2>
       <ul>
         {bookings.map(b => {
-          const service = services.find(s => s.id === b.service_id);
-          const staffMember = staff.find(s => s.id === b.staff_id);
+          const service = b.expand?.service_id;
+          const master = service?.expand?.master;
           return (
             <li key={b.id}>
-              Услуга: {service?.name || b.service_id} ({service?.duration_minutes} мин) <br />
-              Мастер: {staffMember?.first_name} {staffMember?.last_name || ''} <br />
-              Дата: {new Date(b.date).toLocaleString()}
+              Service: {service?.name || b.service_id} ({service?.duration_minutes} min) <br />
+              Staff: {master?.display_name || service?.master || '-'} <br />
+              Date: {b.start ? new Date(b.start).toLocaleString() : '-'}
             </li>
           );
         })}

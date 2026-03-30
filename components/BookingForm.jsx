@@ -5,29 +5,20 @@ import { useAuth } from '../hooks/useAuth';
 export default function BookingForm({ onBookingCreated }) {
   const { user } = useAuth();
   const [services, setServices] = useState([]);
-  const [staff, setStaff] = useState([]);
   const [serviceId, setServiceId] = useState('');
-  const [staffId, setStaffId] = useState('');
-  const [date, setDate] = useState('');
+  const [start, setStart] = useState('');
   const [loading, setLoading] = useState(false);
   const isMounted = useRef(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // Получаем услуги
         const servicesData = await pb.collection('services').getFullList();
         if (isMounted.current) setServices(servicesData);
-
-        // Получаем мастеров (staff)
-        const staffData = await pb.collection('users').getFullList({
-          filter: `role_id = "staff_role_id"` // замените на реальный ID роли staff
-        });
-        if (isMounted.current) setStaff(staffData);
       } catch (err) {
         // Ignore auto-cancellation errors when component unmounts
         if (err.message?.includes('autocancelled')) return;
-        alert(err.message || 'Ошибка при загрузке данных');
+        alert(err.message || 'Failed to load services');
       }
     };
     fetchData();
@@ -39,22 +30,20 @@ export default function BookingForm({ onBookingCreated }) {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!serviceId || !staffId || !date) return alert('Заполните все поля');
+    if (!serviceId || !start) return alert('Please fill in all fields');
     setLoading(true);
     try {
       const booking = await pb.collection('reservations').create({
         client_id: user.id,
         service_id: serviceId,
-        staff_id: staffId,
-        date,
+        start: new Date(start).toISOString(),
       });
-      alert('Бронирование создано!');
+      alert('Booking created successfully!');
       setServiceId('');
-      setStaffId('');
-      setDate('');
+      setStart('');
       if (onBookingCreated) onBookingCreated(booking);
     } catch (err) {
-      alert(err.message || 'Ошибка при создании брони');
+      alert(err.message || 'Failed to create booking');
     } finally {
       setLoading(false);
     }
@@ -62,33 +51,23 @@ export default function BookingForm({ onBookingCreated }) {
 
   return (
     <form onSubmit={handleSubmit}>
-      <h2>Создать бронь</h2>
+      <h2>Create Booking</h2>
 
-      <label>Услуга:</label>
+      <label>Service:</label>
       <select value={serviceId} onChange={e => setServiceId(e.target.value)}>
-        <option value="">Выберите услугу</option>
+        <option value="">Select a service</option>
         {services.map(s => (
           <option key={s.id} value={s.id}>
-            {s.name} ({s.duration_minutes} мин / {s.price_cents / 100}€)
+            {s.name} ({s.duration_minutes} min / {(s.cost_cents || 0) / 100} EUR)
           </option>
         ))}
       </select>
 
-      <label>Мастер:</label>
-      <select value={staffId} onChange={e => setStaffId(e.target.value)}>
-        <option value="">Выберите мастера</option>
-        {staff.map(s => (
-          <option key={s.id} value={s.id}>
-            {s.first_name} {s.last_name || ''}
-          </option>
-        ))}
-      </select>
-
-      <label>Дата и время:</label>
-      <input type="datetime-local" value={date} onChange={e => setDate(e.target.value)} />
+      <label>Date and time:</label>
+      <input type="datetime-local" value={start} onChange={e => setStart(e.target.value)} />
 
       <button type="submit" disabled={loading}>
-        {loading ? 'Создаём...' : 'Создать бронь'}
+        {loading ? 'Creating...' : 'Create booking'}
       </button>
     </form>
   );

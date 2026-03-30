@@ -5,7 +5,7 @@ import MyBookings from './components/MyBookings';
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth();
-  if (loading) return <p>Загрузка...</p>;
+  if (loading) return <p>Loading...</p>;
   if (!user) return <Navigate to="/login" />;
   return children;
 }

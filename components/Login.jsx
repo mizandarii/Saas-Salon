@@ -14,7 +14,7 @@ export default function Login() {
       await login(email, password);
       navigate('/my-bookings');
     } catch (err) {
-      alert(err.message || 'Ошибка при логине');
+      alert(err.message || 'Login failed');
     }
   };
 
@@ -30,12 +30,12 @@ export default function Login() {
       />
       <input
         type="password"
-        placeholder="Пароль"
+        placeholder="Password"
         value={password}
         onChange={e => setPassword(e.target.value)}
         required
       />
-      <button type="submit">Войти</button>
+      <button type="submit">Sign in</button>
     </form>
   );
 }
