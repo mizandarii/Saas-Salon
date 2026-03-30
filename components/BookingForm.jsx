@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import pb from '../api/pocketbase';
 import { useAuth } from '../hooks/useAuth';
 
@@ -10,24 +10,31 @@ export default function BookingForm({ onBookingCreated }) {
   const [staffId, setStaffId] = useState('');
   const [date, setDate] = useState('');
   const [loading, setLoading] = useState(false);
+  const isMounted = useRef(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Получаем услуги
         const servicesData = await pb.collection('services').getFullList();
-        setServices(servicesData);
+        if (isMounted.current) setServices(servicesData);
 
         // Получаем мастеров (staff)
         const staffData = await pb.collection('users').getFullList({
           filter: `role_id = "staff_role_id"` // замените на реальный ID роли staff
         });
-        setStaff(staffData);
+        if (isMounted.current) setStaff(staffData);
       } catch (err) {
+        // Ignore auto-cancellation errors when component unmounts
+        if (err.message?.includes('autocancelled')) return;
         alert(err.message || 'Ошибка при загрузке данных');
       }
     };
     fetchData();
+
+    return () => {
+      isMounted.current = false;
+    };
   }, []);
 
   const handleSubmit = async (e) => {

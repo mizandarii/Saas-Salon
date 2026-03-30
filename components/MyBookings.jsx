@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import pb from '../api/pocketbase';
 import { useAuth } from '../hooks/useAuth';
 import BookingForm from './BookingForm';
@@ -9,32 +9,43 @@ export default function MyBookings() {
   const [services, setServices] = useState([]);
   const [staff, setStaff] = useState([]);
   const [loading, setLoading] = useState(true);
+  const isMounted = useRef(true);
 
   const fetchBookings = async () => {
     try {
       const data = await pb.collection('reservations').getFullList({
         filter: `client_id = "${user.id}"`,
       });
-      setBookings(data);
+      if (isMounted.current) setBookings(data);
     } catch (err) {
+      // Ignore auto-cancellation errors when component unmounts
+      if (err.message?.includes('autocancelled')) return;
       alert(err.message || 'Ошибка при получении бронирований');
     } finally {
-      setLoading(false);
+      if (isMounted.current) setLoading(false);
     }
   };
 
   const fetchData = async () => {
     try {
       const servicesData = await pb.collection('services').getFullList();
-      setServices(servicesData);
+      if (isMounted.current) setServices(servicesData);
       const staffData = await pb.collection('users').getFullList({
         filter: `role_id = "staff_role_id"`
       });
-      setStaff(staffData);
+      if (isMounted.current) setStaff(staffData);
     } catch (err) {
+      // Ignore auto-cancellation errors when component unmounts
+      if (err.message?.includes('autocancelled')) return;
       console.error('Error fetching services/staff:', err);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
 
   useEffect(() => {
     if (!user) return;
