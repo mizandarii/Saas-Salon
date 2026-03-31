@@ -84,9 +84,15 @@ export default function BookingForm({ onBookingCreated }) {
         return [];
       }
 
-      const loadError = new Error('Could not load availability records.');
-      loadError.cause = err;
-      throw loadError;
+      console.error('Availability fetch failed', {
+        status: err?.status,
+        message: err?.message,
+        response: err?.response,
+        masterId,
+        weekday,
+        weekdayAlt,
+      });
+      throw err;
     }
 
     return [
@@ -115,8 +121,14 @@ export default function BookingForm({ onBookingCreated }) {
     let windows = [];
     try {
       windows = await getAvailabilityWindowsForDate(service, selectedStart);
-    } catch (_err) {
-      return { ok: false, reason: 'Could not load staff availability. Please try again.' };
+    } catch (err) {
+      return {
+        ok: false,
+        reason: getPocketBaseErrorMessage(
+          err,
+          'Could not load staff availability. Please try again.',
+        ),
+      };
     }
 
     if (!windows.length) {
