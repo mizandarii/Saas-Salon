@@ -10,6 +10,17 @@ const createUsernameFromEmail = (email) => {
 };
 
 const formatPbError = (err, fallbackMessage) => {
+  const status = err?.status ?? err?.response?.status;
+  const topMessage = err?.response?.message || err?.message;
+
+  if (
+    status === 400 &&
+    topMessage &&
+    topMessage.toLowerCase().includes('something went wrong while processing your request')
+  ) {
+    return 'Registration is blocked by backend configuration. Check users create rule, ensure public signup is allowed, and verify a roles record for client exists and is accessible by signup flow.';
+  }
+
   const data = err?.response?.data;
   if (data && typeof data === 'object') {
     const messages = Object.values(data)
@@ -28,53 +39,51 @@ const formatPbError = (err, fallbackMessage) => {
   return fallbackMessage;
 };
 
+const getClientRoleId = async () => {
+  try {
+    const roleRecord = await pb.collection('roles').getFirstListItem('role = "client"');
+    console.log('[Auth] Found client role:', roleRecord?.id);
+    return roleRecord?.id || null;
+  } catch (err) {
+    console.log('[Auth] Failed to find client role:', err?.message);
+    return null;
+  }
+};
+
 const createUserWithFallbackPayloads = async ({ name, email, password }) => {
   const username = createUsernameFromEmail(email);
   const trimmedName = name?.trim() || username;
+  const clientRoleId = await getClientRoleId();
+
+const roleFields = clientRoleId ? { role_id: clientRoleId } : {};
   const payloads = [
     {
       username,
       name: trimmedName,
       email,
       emailVisibility: true,
+      ...roleFields,
       password,
       passwordConfirm: password,
     },
     {
       username,
       email,
+      ...roleFields,
       password,
       passwordConfirm: password,
     },
     {
       email,
+      ...roleFields,
       password,
       passwordConfirm: password,
     },
-  ];
-
-  let lastError;
-  for (const payload of payloads) {
-    try {
-      return await pb.collection('users').create(payload);
-    } catch (err) {
-      lastError = err;
-      if (err?.status !== 400) {
-        break;
-      }
-    }
-  }
-
-  throw lastError;
-};
-
-export const useAuth = () => {
-  const [user, setUser] = useState(pb.authStore.model);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    const unsubscribe = pb.authStore.onChange(() => {
-      setUser(pb.authStore.model);
+     {
+       email,
+       password,
+       passwordConfirm: password,
+     },
       setLoading(false);
     });
     setUser(pb.authStore.model);
