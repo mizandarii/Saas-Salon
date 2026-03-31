@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
+import Homepage from './components/Homepage';
 import Login from './components/Login';
 import MyBookings from './components/MyBookings';
 
@@ -14,7 +15,7 @@ export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Navigate to="/login" />} />
+        <Route path="/" element={<Homepage />} />
         <Route path="/login" element={<Login />} />
         <Route
           path="/my-bookings"
