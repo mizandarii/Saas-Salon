@@ -180,8 +180,9 @@ export default function BookingForm({ onBookingCreated }) {
       }
 
       try {
-        const windows = await getAvailabilityWindowsForDate(selectedService, start);
-        if (!isMounted.current) return;
+const windows = await pb.collection('availability').getFullList({
+  filter: `weekday = ${weekdayAlt}`,
+});
 
         if (!windows.length) {
           setAvailabilityHint('No availability for this staff member on the selected day.');
