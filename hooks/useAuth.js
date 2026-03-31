@@ -38,7 +38,6 @@ const createUser = async ({ name, email, password }) => {
     display_name: name?.trim() || email,
     email,
     emailVisibility: true,
-    role_id: CLIENT_ROLE_ID,
     password,
     passwordConfirm: password,
   });
