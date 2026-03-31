@@ -94,6 +94,11 @@ export default function BookingForm({ onBookingCreated }) {
       });
       throw err;
     }
+    console.log({
+  masterId,
+  weekday,
+  weekdayAlt,
+});
 
     return [
       ...windowsByJsWeekday,
@@ -101,6 +106,7 @@ export default function BookingForm({ onBookingCreated }) {
         (w) => !windowsByJsWeekday.some((x) => x.id === w.id),
       ),
     ];
+    
   };
 
   const isWithinAvailability = async (service, selectedStart) => {
