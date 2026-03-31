@@ -27,6 +27,70 @@ export default function BookingForm({ onBookingCreated }) {
     return responseMessage || err?.message || fallback;
   };
 
+  const extractMinutes = (dateLike) => {
+    const text = String(dateLike || '');
+    const timePart = text.includes('T') ? text.split('T')[1] : text.split(' ')[1];
+    if (!timePart) return null;
+
+    const cleanTime = timePart.slice(0, 5);
+    const [hoursRaw, minutesRaw] = cleanTime.split(':');
+    const hours = Number(hoursRaw);
+    const minutes = Number(minutesRaw);
+
+    if (Number.isNaN(hours) || Number.isNaN(minutes)) return null;
+    return hours * 60 + minutes;
+  };
+
+  const isWithinAvailability = async (service, selectedStart) => {
+    const masterId = service?.master;
+    if (!masterId) {
+      return { ok: false, reason: 'Selected service has no assigned staff member.' };
+    }
+
+    const bookingDate = new Date(selectedStart);
+    const weekday = bookingDate.getDay();
+    const weekdayAlt = weekday === 0 ? 7 : weekday;
+    const requestedMinutes = extractMinutes(selectedStart);
+
+    if (requestedMinutes === null) {
+      return { ok: false, reason: 'Invalid booking time format.' };
+    }
+
+    const [windowsByJsWeekday, windowsByIsoWeekday] = await Promise.all([
+      pb.collection('availability').getFullList({
+        filter: `master = "${masterId}" && weekday = ${weekday}`,
+      }),
+      pb.collection('availability').getFullList({
+        filter: `master = "${masterId}" && weekday = ${weekdayAlt}`,
+      }),
+    ]);
+
+    const windows = [
+      ...windowsByJsWeekday,
+      ...windowsByIsoWeekday.filter(
+        (w) => !windowsByJsWeekday.some((x) => x.id === w.id),
+      ),
+    ];
+
+    if (!windows.length) {
+      return { ok: false, reason: 'No availability configured for this staff member on this day.' };
+    }
+
+    const hasMatchingWindow = windows.some((slot) => {
+      const startMinutes = extractMinutes(slot.start);
+      const endMinutes = extractMinutes(slot.end);
+      if (startMinutes === null || endMinutes === null) return false;
+
+      return requestedMinutes >= startMinutes && requestedMinutes < endMinutes;
+    });
+
+    if (!hasMatchingWindow) {
+      return { ok: false, reason: 'Selected time is outside staff availability.' };
+    }
+
+    return { ok: true };
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -53,6 +117,18 @@ export default function BookingForm({ onBookingCreated }) {
       const startDate = new Date(start);
       if (Number.isNaN(startDate.getTime())) {
         alert('Invalid date and time');
+        return;
+      }
+
+      const selectedService = services.find((s) => s.id === serviceId);
+      if (!selectedService) {
+        alert('Selected service was not found');
+        return;
+      }
+
+      const availabilityCheck = await isWithinAvailability(selectedService, start);
+      if (!availabilityCheck.ok) {
+        alert(availabilityCheck.reason);
         return;
       }
 
