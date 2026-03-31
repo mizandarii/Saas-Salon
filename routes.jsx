@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import Homepage from './components/Homepage';
 import Login from './components/Login';
@@ -13,7 +13,7 @@ function ProtectedRoute({ children }) {
 
 export default function AppRoutes() {
   return (
-    <BrowserRouter>
+    <HashRouter>
       <Routes>
         <Route path="/" element={<Homepage />} />
         <Route path="/login" element={<Login />} />
@@ -25,7 +25,8 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
+        <Route path="*" element={<Homepage />} />
       </Routes>
-    </BrowserRouter>
+    </HashRouter>
   );
 }
