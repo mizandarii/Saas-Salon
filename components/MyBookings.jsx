@@ -9,6 +9,12 @@ export default function MyBookings() {
   const [loading, setLoading] = useState(true);
   const isMounted = useRef(true);
 
+  const getMasterFirstName = (master) => {
+    const fullName = master?.display_name?.trim();
+    if (!fullName) return 'Unknown';
+    return fullName.split(' ')[0];
+  };
+
   const fetchBookings = async () => {
     try {
       const data = await pb.collection('reservations').getFullList({
@@ -52,7 +58,7 @@ export default function MyBookings() {
           return (
             <li key={b.id}>
               Service: {service?.name || b.service_id} ({service?.duration_minutes} min) <br />
-              Staff: {master?.display_name || service?.master || '-'} <br />
+              Staff: {getMasterFirstName(master)} <br />
               Date: {b.start ? new Date(b.start).toLocaleString() : '-'}
             </li>
           );
