@@ -18,7 +18,7 @@ const formatPbError = (err, fallbackMessage) => {
     topMessage &&
     topMessage.toLowerCase().includes('something went wrong while processing your request')
   ) {
-    return 'Registration is blocked by backend configuration. Check users create rule, ensure public signup is allowed, and verify a roles record for client exists and is accessible by signup flow.';
+    return 'Registration is blocked by backend configuration. Check users create rule, ensure public signup is allowed, and verify a roles record for client exists.';
   }
 
   const data = err?.response?.data;
@@ -55,7 +55,7 @@ const createUserWithFallbackPayloads = async ({ name, email, password }) => {
   const trimmedName = name?.trim() || username;
   const clientRoleId = await getClientRoleId();
 
-const roleFields = clientRoleId ? { role_id: clientRoleId } : {};
+  const roleFields = clientRoleId ? { role_id: clientRoleId } : {};
   const payloads = [
     {
       username,
@@ -79,11 +79,35 @@ const roleFields = clientRoleId ? { role_id: clientRoleId } : {};
       password,
       passwordConfirm: password,
     },
-     {
-       email,
-       password,
-       passwordConfirm: password,
-     },
+    {
+      email,
+      password,
+      passwordConfirm: password,
+    },
+  ];
+
+  let lastError;
+  for (const payload of payloads) {
+    try {
+      return await pb.collection('users').create(payload);
+    } catch (err) {
+      lastError = err;
+      if (err?.status !== 400) {
+        break;
+      }
+    }
+  }
+
+  throw lastError;
+};
+
+export const useAuth = () => {
+  const [user, setUser] = useState(pb.authStore.model);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const unsubscribe = pb.authStore.onChange(() => {
+      setUser(pb.authStore.model);
       setLoading(false);
     });
     setUser(pb.authStore.model);
