@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import pb from '../api/pocketbase';
 
+const CLIENT_ROLE_ID = 'jnbnkhrw07fksyk';
+
 const createUsernameFromEmail = (email) => {
   const localPart = (email || '').split('@')[0] || 'user';
   const safe = localPart.toLowerCase().replace(/[^a-z0-9._-]/g, '');
@@ -40,14 +42,7 @@ const formatPbError = (err, fallbackMessage) => {
 };
 
 const getClientRoleId = async () => {
-  try {
-    const roleRecord = await pb.collection('roles').getFirstListItem('role = "client"');
-    console.log('[Auth] Found client role:', roleRecord?.id);
-    return roleRecord?.id || null;
-  } catch (err) {
-    console.log('[Auth] Failed to find client role:', err?.message);
-    return null;
-  }
+  return CLIENT_ROLE_ID;
 };
 
 const createUserWithFallbackPayloads = async ({ name, email, password }) => {
