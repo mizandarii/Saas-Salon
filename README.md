@@ -1,5 +1,5 @@
 # 💇‍♀️ Broneerimisplatvorm (SaaS)
-##📌 Projekti kirjeldus
+## 📌 Projekti kirjeldus
 
 See veebirakendus on broneerimisplatvorm juuksuritöökodadele ja teenindusettevõtetele.
 
@@ -28,9 +28,8 @@ Eesmärk on lihtsustada ajaplaneerimist ja vähendada käsitsi broneerimist.
 - Vähem infrastruktuuri keerukust
 - Keskendub äriloogikale, mitte serverihaldusele
 ## 🔗 Lingid töötavatele teenustele  
-🌐 Frontend: [SIIA FRONTEND URL]  
-🛠️ PocketBase Admin: [SIIA POCKETBASE ADMIN URL]
-
+🌐 Frontend: [[FRONTEND URL] ](http://atofmuqtfmzt2h7xztux0a5n.176.112.158.15.sslip.io/login)     
+🛠️ PocketBase Admin: [Open Admin Panel](http://pocketbase-qsbygtgljx5vtgnpouj0w2g7.176.112.158.15.sslip.io/_/#/collections?collection=pbc_1747969721&filter=&sort=-%40rowid)   
 ⚙️ Paigaldusjuhend
 1. Klooni repository
 ```bash
@@ -41,7 +40,7 @@ cd <project-folder>
 ```bash
 npm install
 ```
-5. Keskkonnamuutujad
+4. Keskkonnamuutujad
 
 VITE_POCKETBASE_URL — PocketBase'i avalik URL
 
@@ -49,7 +48,7 @@ STRIPE_PUBLIC_KEY — Stripe avalik võti
 
 STRIPE_WEBHOOK_SECRET — Webhook'i saladus
 
-4. Käivita arendusserver
+5. Käivita arendusserver
 ```bash
 npm run dev
 ```
@@ -59,15 +58,7 @@ npm run build
 
 npm run preview
 ```
-
-🔐 Keskkonnamuutujad
-
-Loo .env fail järgmiste muutujatega:
-VITE_POCKETBASE_URL — PocketBase'i avalik URL
-
-STRIPE_PUBLIC_KEY — Stripe avalik võti
-
-STRIPE_WEBHOOK_SECRET — Webhook'i saladus
-👥 Meeskond
-Darina – API loogika, frontend arendus, Stripe integratsioon
+  
+## 👥 Meeskond
+Darina – API loogika, frontend arendus, Stripe integratsioon    
 Kristiina – andmebaasi disain, frontend arendus
