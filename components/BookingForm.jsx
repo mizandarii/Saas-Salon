@@ -10,6 +10,23 @@ export default function BookingForm({ onBookingCreated }) {
   const [loading, setLoading] = useState(false);
   const isMounted = useRef(true);
 
+  const getPocketBaseErrorMessage = (err, fallback) => {
+    const responseMessage = err?.response?.message;
+    const fieldErrors = err?.response?.data;
+
+    if (fieldErrors && typeof fieldErrors === 'object') {
+      const details = Object.entries(fieldErrors)
+        .map(([field, value]) => `${field}: ${value?.message || 'invalid value'}`)
+        .join('\n');
+
+      if (details) {
+        return `${responseMessage || fallback}\n${details}`;
+      }
+    }
+
+    return responseMessage || err?.message || fallback;
+  };
+
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -33,17 +50,27 @@ export default function BookingForm({ onBookingCreated }) {
     if (!serviceId || !start) return alert('Please fill in all fields');
     setLoading(true);
     try {
+      const startDate = new Date(start);
+      if (Number.isNaN(startDate.getTime())) {
+        alert('Invalid date and time');
+        return;
+      }
+
       const booking = await pb.collection('reservations').create({
         client_id: user.id,
         service_id: serviceId,
-        start: new Date(start).toISOString(),
+        start: startDate.toISOString(),
       });
       alert('Booking created successfully!');
       setServiceId('');
       setStart('');
       if (onBookingCreated) onBookingCreated(booking);
     } catch (err) {
-      alert(err.message || 'Failed to create booking');
+      console.error('Reservation create failed', {
+        status: err?.status,
+        response: err?.response,
+      });
+      alert(getPocketBaseErrorMessage(err, 'Failed to create booking'));
     } finally {
       setLoading(false);
     }
