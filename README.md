@@ -1,65 +1,73 @@
 # 💇‍♀️ Broneerimisplatvorm (SaaS)
+##📌 Projekti kirjeldus
 
-## 📌 Projekti kirjeldus
+See veebirakendus on broneerimisplatvorm juuksuritöökodadele ja teenindusettevõtetele.
 
-See rakendus on veebipõhine broneerimisplatvorm juuksuritöökodadele ja teenindusettevõtetele.  
-Kasutajad saavad luua konto, sisse logida, valida sobiva teenuse ja broneerida aja konkreetse töötaja juurde.  
+# Rakendus võimaldab:
 
-Rakendus on mõeldud:
-- klientidele (aja broneerimine)
-- töötajatele (oma broneeringute haldamine)
-- administraatoritele (andmete haldus)
+- klientidel vaadata teenuseid ja broneerida aegu
+- töötajatel hallata oma saadavust ja broneeringuid
+- administraatoritel hallata teenuseid, töötajaid ja süsteemi andmeid
 
----
+Eesmärk on lihtsustada ajaplaneerimist ja vähendada käsitsi broneerimist.
 
 ## 🏗️ Arhitektuuri põhjendus
 
-Projekt kasutab järgmisi tehnoloogiaid:
+# Projekt kasutab kaasaegset arhitektuuri:
 
-- **React** — frontend raamistik kasutajaliidese loomiseks  
-- **PocketBase** — backend-as-a-service (andmebaas + API + autentimine)  
+# Frontend: React (Vite)
+- Kiire ja modulaarne kasutajaliides
+- Sobib hästi dünaamiliste broneerimisvoogude jaoks
+- Lihtne hallata komponentidepõhist loogikat
+# Backend: PocketBase (hostitud Coolify keskkonnas)
+- Pakub andmebaasi, autentimist ja REST API-t ühes lahenduses
+- Ei vaja eraldi backend serverit
+- Kiire arendus ja lihtne haldus
+# Miks see arhitektuur:
+- Kiirem arendus kui eraldi backendiga lahendus
+- Vähem infrastruktuuri keerukust
+- Keskendub äriloogikale, mitte serverihaldusele
+## 🔗 Lingid töötavatele teenustele  
+🌐 Frontend: [SIIA FRONTEND URL]  
+🛠️ PocketBase Admin: [SIIA POCKETBASE ADMIN URL]
 
-Valiku põhjendus:
-- PocketBase võimaldab kiiresti luua API ja autentimise ilma eraldi backendita  
-- React võimaldab luua dünaamilise ja modulaarse kasutajaliidese  
-- Selline arhitektuur vähendab arendusaega ja lihtsustab projekti  
-
----
-
-## 🔗 Lingid töötavatele teenustele
-
-- Frontend:  
-- PocketBase Admin:  http://pocketbase-qsbygtgljx5vtgnpouj0w2g7.176.112.158.15.sslip.io/_/#/collections?collection=pbc_1736455494&filter=&sort=-%40rowid
-
----
-
-## ⚙️ Paigaldusjuhend
-
-### 1. Klooni repository
-
+⚙️ Paigaldusjuhend
+1. Klooni repository
 ```bash
 git clone <repo-url>
 cd <project-folder>
 ```
-### 2. Paigalda sõltuvused
+3. Paigalda sõltuvused
 ```bash
 npm install
 ```
-### 3. käivita PocketBase
+5. Keskkonnamuutujad
+
+VITE_POCKETBASE_URL — PocketBase'i avalik URL
+
+STRIPE_PUBLIC_KEY — Stripe avalik võti
+
+STRIPE_WEBHOOK_SECRET — Webhook'i saladus
+
+4. Käivita arendusserver
 ```bash
-./pocketbase serve
+npm run dev
 ```
-### 4. Käivita frontend
+6. Build production jaoks
 ```bash
-npm
+npm run build
+
+npm run preview
 ```
 
-## Keskkonnamuutujad
-Loo .env fail ja lise järgmised muutujad:
-```bash
-VITE_PB_URL=
-```
+🔐 Keskkonnamuutujad
 
-## Meeskond
-- Darina - API seadistamine, STRIPE-i integratsioon
-- Kristiina - andmebaasi disain, frontend
+Loo .env fail järgmiste muutujatega:
+VITE_POCKETBASE_URL — PocketBase'i avalik URL
+
+STRIPE_PUBLIC_KEY — Stripe avalik võti
+
+STRIPE_WEBHOOK_SECRET — Webhook'i saladus
+👥 Meeskond
+Darina – API loogika, frontend arendus, Stripe integratsioon
+Kristiina – andmebaasi disain, frontend arendus
