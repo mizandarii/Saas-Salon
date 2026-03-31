@@ -24,7 +24,22 @@ export const useAuth = () => {
     }
   };
 
+  const register = async ({ name, email, password }) => {
+    try {
+      await pb.collection('users').create({
+        name,
+        email,
+        password,
+        passwordConfirm: password,
+      });
+      const authData = await pb.collection('users').authWithPassword(email, password);
+      return authData;
+    } catch (err) {
+      throw err;
+    }
+  };
+
   const logout = () => pb.authStore.clear();
 
-  return { user, loading, login, logout };
+  return { user, loading, login, register, logout };
 };

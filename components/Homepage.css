@@ -12,6 +12,11 @@
   align-items: center;
 }
 
+.header-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
 .logo {
   font-size: 1.5rem;
   font-weight: bold;
@@ -139,6 +144,13 @@
   font-size: 1rem;
   transition: all 0.3s ease;
   cursor: pointer;
+}
+
+.cta-actions {
+  display: flex;
+  justify-content: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
 }
 
 .cta-btn:hover {

@@ -2,6 +2,7 @@ import { HashRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import Homepage from './components/Homepage';
 import Login from './components/Login';
+import Register from './components/Register';
 import MyBookings from './components/MyBookings';
 
 function ProtectedRoute({ children }) {
@@ -17,6 +18,7 @@ export default function AppRoutes() {
       <Routes>
         <Route path="/" element={<Homepage />} />
         <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
         <Route
           path="/my-bookings"
           element={

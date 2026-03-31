@@ -46,9 +46,14 @@ export default function Homepage() {
       <header className="header">
         <div className="container">
           <h1 className="logo">✨ Salon Studio</h1>
-          <Link to="/login" className="login-btn">
-            Login
-          </Link>
+          <div className="header-actions">
+            <Link to="/register" className="login-btn">
+              Sign up
+            </Link>
+            <Link to="/login" className="login-btn">
+              Login
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -78,9 +83,14 @@ export default function Homepage() {
         <div className="container">
           <h2>Ready to book?</h2>
           <p>Sign in to your account to book an appointment</p>
-          <Link to="/login" className="cta-btn">
-            Get Started
-          </Link>
+          <div className="cta-actions">
+            <Link to="/register" className="cta-btn">
+              Create account
+            </Link>
+            <Link to="/login" className="cta-btn">
+              Get Started
+            </Link>
+          </div>
         </div>
       </section>
 
