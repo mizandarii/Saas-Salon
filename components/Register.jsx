@@ -21,7 +21,12 @@ export default function Register() {
 
     setLoading(true);
     try {
-      await register({ name, email, password });
+      await register({
+  display_name: name,
+  email,
+  password,
+  passwordConfirm: password
+});
       navigate('/my-bookings');
     } catch (err) {
       alert(err.message || 'Registration failed');
