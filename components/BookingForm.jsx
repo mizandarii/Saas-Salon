@@ -7,24 +7,26 @@ export default function BookingForm({ onBookingCreated }) {
   const [services, setServices] = useState([]);
   const [serviceId, setServiceId] = useState('');
   const [start, setStart] = useState('');
+  const [availabilityHint, setAvailabilityHint] = useState('Select a service and date to see available hours.');
   const [loading, setLoading] = useState(false);
   const isMounted = useRef(true);
+  const NIGHT_START_MINUTES = 20 * 60;
+  const NIGHT_END_MINUTES = 8 * 60;
 
   const getPocketBaseErrorMessage = (err, fallback) => {
-    const responseMessage = err?.response?.message;
-    const fieldErrors = err?.response?.data;
+    if (err?.status === 403) {
+      return 'You are not allowed to create this booking. Please contact support.';
+    }
 
+    const fieldErrors = err?.response?.data;
     if (fieldErrors && typeof fieldErrors === 'object') {
       const details = Object.entries(fieldErrors)
         .map(([field, value]) => `${field}: ${value?.message || 'invalid value'}`)
-        .join('\n');
-
-      if (details) {
-        return `${responseMessage || fallback}\n${details}`;
-      }
+        .join('; ');
+      return details ? `Could not create booking. ${details}` : fallback;
     }
 
-    return responseMessage || err?.message || fallback;
+    return err?.response?.message || fallback;
   };
 
   const extractMinutes = (dateLike) => {
@@ -41,20 +43,23 @@ export default function BookingForm({ onBookingCreated }) {
     return hours * 60 + minutes;
   };
 
-  const isWithinAvailability = async (service, selectedStart) => {
+  const formatMinutes = (totalMinutes) => {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+  };
+
+  const isBlockedNightTime = (minutes) => (
+    minutes >= NIGHT_START_MINUTES || minutes < NIGHT_END_MINUTES
+  );
+
+  const getAvailabilityWindowsForDate = async (service, selectedStart) => {
     const masterId = service?.master;
-    if (!masterId) {
-      return { ok: false, reason: 'Selected service has no assigned staff member.' };
-    }
+    if (!masterId) return [];
 
     const bookingDate = new Date(selectedStart);
     const weekday = bookingDate.getDay();
     const weekdayAlt = weekday === 0 ? 7 : weekday;
-    const requestedMinutes = extractMinutes(selectedStart);
-
-    if (requestedMinutes === null) {
-      return { ok: false, reason: 'Invalid booking time format.' };
-    }
 
     const [windowsByJsWeekday, windowsByIsoWeekday] = await Promise.all([
       pb.collection('availability').getFullList({
@@ -65,12 +70,30 @@ export default function BookingForm({ onBookingCreated }) {
       }),
     ]);
 
-    const windows = [
+    return [
       ...windowsByJsWeekday,
       ...windowsByIsoWeekday.filter(
         (w) => !windowsByJsWeekday.some((x) => x.id === w.id),
       ),
     ];
+  };
+
+  const isWithinAvailability = async (service, selectedStart) => {
+    if (!service?.master) {
+      return { ok: false, reason: 'Selected service has no assigned staff member.' };
+    }
+
+    const requestedMinutes = extractMinutes(selectedStart);
+
+    if (requestedMinutes === null) {
+      return { ok: false, reason: 'Invalid booking time format.' };
+    }
+
+    if (isBlockedNightTime(requestedMinutes)) {
+      return { ok: false, reason: 'Bookings are allowed only between 08:00 and 20:00.' };
+    }
+
+    const windows = await getAvailabilityWindowsForDate(service, selectedStart);
 
     if (!windows.length) {
       return { ok: false, reason: 'No availability configured for this staff member on this day.' };
@@ -90,6 +113,63 @@ export default function BookingForm({ onBookingCreated }) {
 
     return { ok: true };
   };
+
+  useEffect(() => {
+    const updateAvailabilityHint = async () => {
+      if (!serviceId || !start) {
+        if (isMounted.current) {
+          setAvailabilityHint('Select a service and date to see available hours.');
+        }
+        return;
+      }
+
+      const selectedService = services.find((s) => s.id === serviceId);
+      if (!selectedService) {
+        if (isMounted.current) setAvailabilityHint('Select a valid service.');
+        return;
+      }
+
+      const requestedMinutes = extractMinutes(start);
+      if (requestedMinutes !== null && isBlockedNightTime(requestedMinutes)) {
+        if (isMounted.current) {
+          setAvailabilityHint('Night bookings are disabled. Choose a time between 08:00 and 20:00.');
+        }
+        return;
+      }
+
+      try {
+        const windows = await getAvailabilityWindowsForDate(selectedService, start);
+        if (!isMounted.current) return;
+
+        if (!windows.length) {
+          setAvailabilityHint('No availability for this staff member on the selected day.');
+          return;
+        }
+
+        const formatted = windows
+          .map((slot) => {
+            const startMinutes = extractMinutes(slot.start);
+            const endMinutes = extractMinutes(slot.end);
+            if (startMinutes === null || endMinutes === null) return null;
+            return `${formatMinutes(startMinutes)} - ${formatMinutes(endMinutes)}`;
+          })
+          .filter(Boolean)
+          .join(', ');
+
+        setAvailabilityHint(
+          formatted
+            ? `Available windows: ${formatted}`
+            : 'Availability is configured, but time format is invalid in one or more slots.',
+        );
+      } catch (_err) {
+        if (isMounted.current) {
+          setAvailabilityHint('Could not load availability windows.');
+        }
+      }
+    };
+
+    updateAvailabilityHint();
+  }, [serviceId, start, services]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -168,6 +248,7 @@ export default function BookingForm({ onBookingCreated }) {
 
       <label>Date and time:</label>
       <input type="datetime-local" value={start} onChange={e => setStart(e.target.value)} />
+      <p>{availabilityHint}</p>
 
       <button type="submit" disabled={loading}>
         {loading ? 'Creating...' : 'Create booking'}
