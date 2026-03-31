@@ -14,6 +14,12 @@ export default function BookingForm({ onBookingCreated }) {
   const NIGHT_END_MINUTES = 8 * 60;
 
   const getPocketBaseErrorMessage = (err, fallback) => {
+    const message = String(err?.response?.message || err?.message || '');
+
+    if (message.toLowerCase().includes('availability')) {
+      return 'Could not load staff availability. Please try again in a moment.';
+    }
+
     if (err?.status === 403) {
       return 'You are not allowed to create this booking. Please contact support.';
     }
@@ -61,14 +67,27 @@ export default function BookingForm({ onBookingCreated }) {
     const weekday = bookingDate.getDay();
     const weekdayAlt = weekday === 0 ? 7 : weekday;
 
-    const [windowsByJsWeekday, windowsByIsoWeekday] = await Promise.all([
-      pb.collection('availability').getFullList({
-        filter: `master = "${masterId}" && weekday = ${weekday}`,
-      }),
-      pb.collection('availability').getFullList({
-        filter: `master = "${masterId}" && weekday = ${weekdayAlt}`,
-      }),
-    ]);
+    let windowsByJsWeekday = [];
+    let windowsByIsoWeekday = [];
+
+    try {
+      [windowsByJsWeekday, windowsByIsoWeekday] = await Promise.all([
+        pb.collection('availability').getFullList({
+          filter: `master = "${masterId}" && weekday = ${weekday}`,
+        }),
+        pb.collection('availability').getFullList({
+          filter: `master = "${masterId}" && weekday = ${weekdayAlt}`,
+        }),
+      ]);
+    } catch (err) {
+      if (String(err?.message || '').includes('autocancelled')) {
+        return [];
+      }
+
+      const loadError = new Error('Could not load availability records.');
+      loadError.cause = err;
+      throw loadError;
+    }
 
     return [
       ...windowsByJsWeekday,
@@ -93,7 +112,12 @@ export default function BookingForm({ onBookingCreated }) {
       return { ok: false, reason: 'Bookings are allowed only between 08:00 and 20:00.' };
     }
 
-    const windows = await getAvailabilityWindowsForDate(service, selectedStart);
+    let windows = [];
+    try {
+      windows = await getAvailabilityWindowsForDate(service, selectedStart);
+    } catch (_err) {
+      return { ok: false, reason: 'Could not load staff availability. Please try again.' };
+    }
 
     if (!windows.length) {
       return { ok: false, reason: 'No availability configured for this staff member on this day.' };
@@ -163,7 +187,7 @@ export default function BookingForm({ onBookingCreated }) {
         );
       } catch (_err) {
         if (isMounted.current) {
-          setAvailabilityHint('Could not load availability windows.');
+          setAvailabilityHint('Could not load staff availability right now.');
         }
       }
     };
