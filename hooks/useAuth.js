@@ -28,6 +28,46 @@ const formatPbError = (err, fallbackMessage) => {
   return fallbackMessage;
 };
 
+const createUserWithFallbackPayloads = async ({ name, email, password }) => {
+  const username = createUsernameFromEmail(email);
+  const trimmedName = name?.trim() || username;
+  const payloads = [
+    {
+      username,
+      name: trimmedName,
+      email,
+      emailVisibility: true,
+      password,
+      passwordConfirm: password,
+    },
+    {
+      username,
+      email,
+      password,
+      passwordConfirm: password,
+    },
+    {
+      email,
+      password,
+      passwordConfirm: password,
+    },
+  ];
+
+  let lastError;
+  for (const payload of payloads) {
+    try {
+      return await pb.collection('users').create(payload);
+    } catch (err) {
+      lastError = err;
+      if (err?.status !== 400) {
+        break;
+      }
+    }
+  }
+
+  throw lastError;
+};
+
 export const useAuth = () => {
   const [user, setUser] = useState(pb.authStore.model);
   const [loading, setLoading] = useState(true);
@@ -53,15 +93,7 @@ export const useAuth = () => {
 
   const register = async ({ name, email, password }) => {
     try {
-      const username = createUsernameFromEmail(email);
-      await pb.collection('users').create({
-        username,
-        name: name?.trim() || username,
-        email,
-        emailVisibility: true,
-        password,
-        passwordConfirm: password,
-      });
+      await createUserWithFallbackPayloads({ name, email, password });
       const authData = await pb.collection('users').authWithPassword(email, password);
       return authData;
     } catch (err) {
