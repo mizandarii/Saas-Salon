@@ -61,6 +61,33 @@ export default function MyBookings() {
     return bookingTime >= Date.now() ? 'upcoming' : 'past';
   };
 
+  const formatBookingDate = (bookingStart) => {
+    if (!bookingStart) return '-';
+    return new Date(bookingStart).toLocaleString([], {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
+  const upcomingBookings = bookings
+    .filter((booking) => getBookingStatus(booking.start) === 'upcoming')
+    .sort((a, b) => {
+      const dateA = a.start ? new Date(a.start).getTime() : Number.MAX_SAFE_INTEGER;
+      const dateB = b.start ? new Date(b.start).getTime() : Number.MAX_SAFE_INTEGER;
+      return dateA - dateB;
+    });
+
+  const pastBookings = bookings
+    .filter((booking) => getBookingStatus(booking.start) === 'past')
+    .sort((a, b) => {
+      const dateA = a.start ? new Date(a.start).getTime() : 0;
+      const dateB = b.start ? new Date(b.start).getTime() : 0;
+      return dateB - dateA;
+    });
+
   const handleCancelBooking = async (bookingId) => {
     const shouldCancel = window.confirm('Cancel this booking?');
     if (!shouldCancel) return;
@@ -102,12 +129,12 @@ export default function MyBookings() {
 
       <main className="portal-main portal-main-wide">
         <section className="portal-card bookings-card">
-          <h2>Upcoming and past bookings</h2>
-          {bookings.length === 0 ? (
+          <h2>Upcoming bookings</h2>
+          {upcomingBookings.length === 0 ? (
             <p className="portal-subtitle">No bookings yet. Create your first one below.</p>
           ) : (
             <ul className="bookings-list">
-              {bookings.map((b, index) => {
+              {upcomingBookings.map((b, index) => {
                 const service = b.expand?.service_id;
                 const master = service?.expand?.master;
                 const status = getBookingStatus(b.start);
@@ -129,7 +156,7 @@ export default function MyBookings() {
                         : 'Duration unavailable'}
                     </p>
                     <p>Staff: {getMasterFirstName(master)}</p>
-                    <p>Date: {b.start ? new Date(b.start).toLocaleString() : '-'}</p>
+                    <p>Date: {formatBookingDate(b.start)}</p>
                     {status === 'upcoming' && (
                       <button
                         type="button"
@@ -145,6 +172,45 @@ export default function MyBookings() {
               })}
             </ul>
           )}
+
+          <details className="past-bookings-panel" open={upcomingBookings.length === 0}>
+            <summary className="past-bookings-summary">
+              Past bookings <span>({pastBookings.length})</span>
+            </summary>
+
+            {pastBookings.length === 0 ? (
+              <p className="portal-subtitle past-bookings-empty">No past bookings yet.</p>
+            ) : (
+              <ul className="bookings-list past-bookings-list">
+                {pastBookings.map((b, index) => {
+                  const service = b.expand?.service_id;
+                  const master = service?.expand?.master;
+                  const status = getBookingStatus(b.start);
+                  return (
+                    <li
+                      key={b.id}
+                      className={`booking-item booking-item-${status} booking-item-animated`}
+                      style={{ animationDelay: `${index * 45}ms` }}
+                    >
+                      <div className="booking-item-head">
+                        <h3>{service?.name || b.service_id}</h3>
+                        <span className={`booking-status booking-status-${status}`}>
+                          {status === 'upcoming' ? 'Upcoming' : status === 'past' ? 'Past' : 'Unknown'}
+                        </span>
+                      </div>
+                      <p>
+                        {typeof service?.duration_minutes === 'number'
+                          ? `${service.duration_minutes} min`
+                          : 'Duration unavailable'}
+                      </p>
+                      <p>Staff: {getMasterFirstName(master)}</p>
+                      <p>Date: {formatBookingDate(b.start)}</p>
+                    </li>
+                  );
+                })}
+              </ul>
+            )}
+          </details>
         </section>
 
         <section className="portal-card booking-form-card">

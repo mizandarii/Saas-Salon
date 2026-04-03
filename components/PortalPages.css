@@ -236,6 +236,40 @@
   animation: bookingCardReveal 0.45s ease-out forwards;
 }
 
+.past-bookings-panel {
+  margin-top: 1rem;
+  border-top: 1px solid #e8ecf6;
+  padding-top: 1rem;
+}
+
+.past-bookings-summary {
+  list-style: none;
+  cursor: pointer;
+  font-weight: 700;
+  color: #33415f;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.past-bookings-summary::-webkit-details-marker {
+  display: none;
+}
+
+.past-bookings-summary span {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.past-bookings-empty {
+  margin-top: 0.75rem;
+}
+
+.past-bookings-list {
+  margin-top: 0.85rem;
+}
+
 @keyframes bookingCardReveal {
   to {
     opacity: 1;
