@@ -93,25 +93,27 @@ export default function Homepage() {
           ) : (
             <div className="services-grid">
               {services.map(service => (
-                <div key={service.id} className="service-card">
-                  {serviceImagesById[service.id] ? (
-                    <img
-                      src={serviceImagesById[service.id]}
-                      alt={service.name}
-                      className="service-image"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <div className="service-image-placeholder">No image yet</div>
-                  )}
-                  <h3>{service.name}</h3>
-                  <div className="service-details">
-                    {typeof service.duration_minutes === 'number' && (
-                      <span>{service.duration_minutes} min</span>
+                <Link key={service.id} to="/login" className="service-card-link">
+                  <div className="service-card">
+                    {serviceImagesById[service.id] ? (
+                      <img
+                        src={serviceImagesById[service.id]}
+                        alt={service.name}
+                        className="service-image"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <div className="service-image-placeholder">No image yet</div>
                     )}
-                    {formatPrice(service) && <span>{formatPrice(service)}</span>}
+                    <h3>{service.name}</h3>
+                    <div className="service-details">
+                      {typeof service.duration_minutes === 'number' && (
+                        <span>{service.duration_minutes} min</span>
+                      )}
+                      {formatPrice(service) && <span>{formatPrice(service)}</span>}
+                    </div>
                   </div>
-                </div>
+                </Link>
               ))}
             </div>
           )}
