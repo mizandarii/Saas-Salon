@@ -8,6 +8,12 @@ function isAllowedBookingTime(dateTimeValue) {
   return hour >= 7 && hour < 20;
 }
 
+function getServicePaymentLink(service) {
+  if (!service) return '';
+
+  return service.stripe_payment_link || '';
+}
+
 export default function BookingForm({ onBookingCreated }) {
   const { user } = useAuth();
   const [services, setServices] = useState([]);
@@ -41,6 +47,12 @@ export default function BookingForm({ onBookingCreated }) {
       return alert('Bookings are only available between 07:00 and 19:59.');
     }
 
+    const selectedService = services.find((service) => service.id === serviceId);
+    const paymentLink = getServicePaymentLink(selectedService);
+    if (!paymentLink) {
+      return alert('This service does not have a Stripe payment link configured yet.');
+    }
+
     setLoading(true);
     try {
       const booking = await pb.collection('reservations').create({
@@ -48,10 +60,13 @@ export default function BookingForm({ onBookingCreated }) {
         service_id: serviceId,
         start: new Date(start).toISOString(),
       });
-      alert('Booking created successfully!');
+
       setServiceId('');
       setStart('');
       if (onBookingCreated) onBookingCreated(booking);
+
+      // After creating the reservation, send the user to the service-specific Stripe payment page.
+      window.location.assign(paymentLink);
     } catch (err) {
       alert(err.message || 'Failed to create booking');
     } finally {
@@ -78,7 +93,7 @@ export default function BookingForm({ onBookingCreated }) {
       <small>Available booking time: 07:00-19:59</small>
 
       <button type="submit" disabled={loading}>
-        {loading ? 'Creating...' : 'Create booking'}
+        {loading ? 'Redirecting to payment...' : 'Create booking'}
       </button>
     </form>
   );

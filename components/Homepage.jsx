@@ -5,6 +5,7 @@ import './Homepage.css';
 
 export default function Homepage() {
   const [services, setServices] = useState([]);
+  const [serviceImagesById, setServiceImagesById] = useState({});
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const isMounted = useRef(true);
@@ -12,8 +13,26 @@ export default function Homepage() {
   useEffect(() => {
     const fetchServices = async () => {
       try {
-        const data = await pb.collection('services').getFullList({ sort: 'name' });
-        if (isMounted.current) setServices(data);
+        const [servicesData, picsData] = await Promise.all([
+          pb.collection('services').getFullList({ sort: 'name' }),
+          pb.collection('pics').getFullList(),
+        ]);
+
+        const imagesByService = {};
+        picsData.forEach((picRecord) => {
+          const linkedService = Array.isArray(picRecord.service)
+            ? picRecord.service[0]
+            : picRecord.service;
+          const fileName = Array.isArray(picRecord.img) ? picRecord.img[0] : picRecord.img;
+
+          if (!linkedService || !fileName || imagesByService[linkedService]) return;
+          imagesByService[linkedService] = pb.files.getURL(picRecord, fileName);
+        });
+
+        if (isMounted.current) {
+          setServices(servicesData);
+          setServiceImagesById(imagesByService);
+        }
       } catch (err) {
         if (err.message?.includes('autocancelled')) return;
         if (isMounted.current) {
@@ -75,6 +94,16 @@ export default function Homepage() {
             <div className="services-grid">
               {services.map(service => (
                 <div key={service.id} className="service-card">
+                  {serviceImagesById[service.id] ? (
+                    <img
+                      src={serviceImagesById[service.id]}
+                      alt={service.name}
+                      className="service-image"
+                      loading="lazy"
+                    />
+                  ) : (
+                    <div className="service-image-placeholder">No image yet</div>
+                  )}
                   <h3>{service.name}</h3>
                   <div className="service-details">
                     {typeof service.duration_minutes === 'number' && (
