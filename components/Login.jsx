@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import './PortalPages.css';
 
 export default function Login() {
   const { login } = useAuth();
@@ -19,26 +20,44 @@ export default function Login() {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <h2>Login</h2>
-      <input
-        type="email"
-        placeholder="Email"
-        value={email}
-        onChange={e => setEmail(e.target.value)}
-        required
-      />
-      <input
-        type="password"
-        placeholder="Password"
-        value={password}
-        onChange={e => setPassword(e.target.value)}
-        required
-      />
-      <button type="submit">Sign in</button>
-      <p>
-        New here? <Link to="/register">Create an account</Link>
-      </p>
-    </form>
+    <div className="portal-page">
+      <header className="portal-header">
+        <div className="portal-container">
+          <Link to="/" className="portal-logo-link">✨ Salon Studio</Link>
+        </div>
+      </header>
+
+      <main className="portal-main">
+        <form onSubmit={handleSubmit} className="portal-card portal-form-card">
+          <h2>Welcome back</h2>
+          <p className="portal-subtitle">Sign in to manage your bookings.</p>
+
+          <label htmlFor="login-email">Email</label>
+          <input
+            id="login-email"
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            onChange={e => setEmail(e.target.value)}
+            required
+          />
+
+          <label htmlFor="login-password">Password</label>
+          <input
+            id="login-password"
+            type="password"
+            placeholder="Your password"
+            value={password}
+            onChange={e => setPassword(e.target.value)}
+            required
+          />
+
+          <button type="submit">Sign in</button>
+          <p className="portal-inline-text">
+            New here? <Link to="/register">Create an account</Link>
+          </p>
+        </form>
+      </main>
+    </div>
   );
 }

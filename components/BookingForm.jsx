@@ -75,11 +75,11 @@ export default function BookingForm({ onBookingCreated }) {
   };
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form onSubmit={handleSubmit} className="portal-form-card embedded-booking-form">
       <h2>Create Booking</h2>
 
-      <label>Service:</label>
-      <select value={serviceId} onChange={e => setServiceId(e.target.value)}>
+      <label htmlFor="service-select">Service</label>
+      <select id="service-select" value={serviceId} onChange={e => setServiceId(e.target.value)}>
         <option value="">Select a service</option>
         {services.map(s => (
           <option key={s.id} value={s.id}>
@@ -88,9 +88,14 @@ export default function BookingForm({ onBookingCreated }) {
         ))}
       </select>
 
-      <label>Date and time:</label>
-      <input type="datetime-local" value={start} onChange={e => setStart(e.target.value)} />
-      <small>Available booking time: 07:00-19:59</small>
+      <label htmlFor="start-datetime">Date and time</label>
+      <input
+        id="start-datetime"
+        type="datetime-local"
+        value={start}
+        onChange={e => setStart(e.target.value)}
+      />
+      <small className="portal-small-text">Available booking time: 07:00-19:59</small>
 
       <button type="submit" disabled={loading}>
         {loading ? 'Redirecting to payment...' : 'Create booking'}
