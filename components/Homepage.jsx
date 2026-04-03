@@ -26,7 +26,7 @@ export default function Homepage() {
           const fileName = Array.isArray(picRecord.img) ? picRecord.img[0] : picRecord.img;
 
           if (!linkedService || !fileName || imagesByService[linkedService]) return;
-          imagesByService[linkedService] = pb.files.getURL(picRecord, fileName);
+          imagesByService[linkedService] = pb.files.getUrl(picRecord, fileName);
         });
 
         if (isMounted.current) {
